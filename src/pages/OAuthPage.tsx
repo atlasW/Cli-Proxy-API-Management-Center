@@ -19,10 +19,13 @@ import iconKimiDark from '@/assets/icons/kimi-dark.svg';
 import iconVertex from '@/assets/icons/vertex.svg';
 import iconGrok from '@/assets/icons/grok.svg';
 import iconGrokDark from '@/assets/icons/grok-dark.svg';
+import iconCopilot from '@/assets/icons/copilot.svg';
+import iconCopilotDark from '@/assets/icons/copilot-dark.svg';
 
 interface ProviderState {
   url?: string;
   state?: string;
+  userCode?: string;
   status?: 'idle' | 'waiting' | 'success' | 'error';
   error?: string;
   polling?: boolean;
@@ -61,7 +64,8 @@ const PROVIDERS: { id: OAuthProvider; titleKey: string; hintKey: string; urlLabe
   { id: 'antigravity', titleKey: 'auth_login.antigravity_oauth_title', hintKey: 'auth_login.antigravity_oauth_hint', urlLabelKey: 'auth_login.antigravity_oauth_url_label', icon: iconAntigravity },
   { id: 'gemini-cli', titleKey: 'auth_login.gemini_cli_oauth_title', hintKey: 'auth_login.gemini_cli_oauth_hint', urlLabelKey: 'auth_login.gemini_cli_oauth_url_label', icon: iconGemini },
   { id: 'kimi', titleKey: 'auth_login.kimi_oauth_title', hintKey: 'auth_login.kimi_oauth_hint', urlLabelKey: 'auth_login.kimi_oauth_url_label', icon: { light: iconKimiLight, dark: iconKimiDark } },
-  { id: 'xai', titleKey: 'auth_login.xai_oauth_title', hintKey: 'auth_login.xai_oauth_hint', urlLabelKey: 'auth_login.xai_oauth_url_label', icon: { light: iconGrok, dark: iconGrokDark } }
+  { id: 'xai', titleKey: 'auth_login.xai_oauth_title', hintKey: 'auth_login.xai_oauth_hint', urlLabelKey: 'auth_login.xai_oauth_url_label', icon: { light: iconGrok, dark: iconGrokDark } },
+  { id: 'copilot', titleKey: 'auth_login.copilot_oauth_title', hintKey: 'auth_login.copilot_oauth_hint', urlLabelKey: 'auth_login.copilot_oauth_url_label', icon: { light: iconCopilot, dark: iconCopilotDark } }
 ];
 
 const CALLBACK_SUPPORTED: OAuthProvider[] = [
@@ -233,6 +237,7 @@ export function OAuthPage() {
     updateProviderState(provider, {
       url: undefined,
       state: undefined,
+      userCode: undefined,
       status: 'success',
       error: undefined,
       polling: false,
@@ -288,6 +293,7 @@ export function OAuthPage() {
     updateProviderState(provider, {
       url: undefined,
       state: undefined,
+      userCode: undefined,
       status: 'waiting',
       polling: true,
       error: undefined,
@@ -312,7 +318,7 @@ export function OAuthPage() {
         showNotification(message, 'error');
         return;
       }
-      updateProviderState(provider, { url: res.url, state: res.state, status: 'waiting', polling: true });
+      updateProviderState(provider, { url: res.url, state: res.state, userCode: res.user_code, status: 'waiting', polling: true });
       startPolling(provider, res.state);
     } catch (err: unknown) {
       const message = getErrorMessage(err);
@@ -507,6 +513,21 @@ export function OAuthPage() {
                           onClick={() => window.open(state.url, '_blank', 'noopener,noreferrer')}
                         >
                           {t(getAuthKey(provider.id, 'open_link'))}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {state.userCode && (
+                    <div className={styles.authUrlBox}>
+                      <div className={styles.authUrlLabel}>
+                        {t('auth_login.copilot_device_code_label', { defaultValue: 'Device code:' })}
+                      </div>
+                      <div className={styles.authUrlValue} style={{ fontSize: '1.5rem', letterSpacing: '0.2em', fontWeight: 600 }}>
+                        {state.userCode}
+                      </div>
+                      <div className={styles.authUrlActions}>
+                        <Button variant="secondary" size="sm" onClick={() => copyLink(state.userCode!)}>
+                          {t(getAuthKey(provider.id, 'copy_link'))}
                         </Button>
                       </div>
                     </div>
